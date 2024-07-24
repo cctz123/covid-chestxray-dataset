@@ -42,8 +42,6 @@ print(f"Total images: {len(images)}")
 print(f"Training images: {len(train_images)}")
 print(f"Testing images: {len(test_images)}")
 
-#pasted code 
-
 class TIMITDataset(Dataset):
     def __init__(self, X, y=None):
         self.data = torch.from_numpy(X).float()
@@ -100,16 +98,48 @@ def clear_directory(directory_path):
     
     print("All files have been deleted.")
 
-directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total'
-clear_directory(directory_to_clear)
-directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/test'
+directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total/data'
 clear_directory(directory_to_clear)
 
 for img in train_images:
     path = find_file_directory('/oscar/home/dfurtad1/projects/COVID19-DATASET', img) + '/' + img
-    destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total'
+    destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total/data'
     shutil.copy(path, destination)
-for img in teast_images:
+
+directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/test/data'
+clear_directory(directory_to_clear)
+
+for img in test_images:
     path = find_file_directory('/oscar/home/dfurtad1/projects/COVID19-DATASET', img) + '/' + img
-    destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/test'
+    destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/test/data'
     shutil.copy(path, destination)
+
+train_tfm = transforms.Compose([
+    # Resize the image into a fixed shape (height = width = 128)
+    transforms.Resize((128, 128)),
+    # You may add some transforms here.
+    # ToTensor() should be the last one of the transforms.
+    transforms.ToTensor(),
+])
+
+# We don't need augmentations in testing and validation.
+# All we need here is to resize the PIL image and transform it into Tensor.
+test_tfm = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor(),
+])
+
+batch_size = 64
+
+from torch.utils.data import DataLoader
+
+# Construct datasets.
+# The argument "loader" tells how torchvision reads the data.
+train_set = DatasetFolder("COVID19-DATASET/train/total", loader=lambda x: Image.open(x), extensions=("jpg", "jpeg", "png"), transform=train_tfm)
+# valid_set = DatasetFolder("food-11/validation", loader=lambda x: Image.open(x), extensions="jpg", transform=test_tfm)
+test_set = DatasetFolder("COVID19-DATASET/test", loader=lambda x: Image.open(x), extensions=("jpg", "jpeg", "png"), transform=test_tfm)
+
+# Construct data loaders.
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+# valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
