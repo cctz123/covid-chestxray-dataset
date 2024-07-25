@@ -7,18 +7,19 @@ import shutil
 # "ConcatDataset" and "Subset" are possibly useful when doing semi-supervised learning.
 from torch.utils.data import ConcatDataset, DataLoader, Subset, Dataset
 from torchvision.datasets import DatasetFolder
+from torchvision import transforms
 
 # This is for the progress bar.
 from tqdm.auto import tqdm
 
 import pandas as pd
 
+import os
+from sklearn.model_selection import train_test_split
+
 data_dir='/oscar/home/dfurtad1/projects/COVID19-DATASET/'
 normal_dir = data_dir + 'train/normal'
 covid_dir = data_dir + 'train/covid19' 
-
-import os
-from sklearn.model_selection import train_test_split
 
 print('Loading data ...')
 
@@ -29,8 +30,8 @@ data_dir='/oscar/home/dfurtad1/projects/COVID19-DATASET/'
 normal_images = [img for img in os.listdir(normal_dir) ]
 covid_images = [img for img in os.listdir(covid_dir) ] 
 
-print(len(normal_images))
-print(len(covid_images))
+print(f"Number of normal images: {len(normal_images)}")
+print(f"Number of covid images: {len(covid_images)}")
 
 images = normal_images + covid_images 
 labels = [0] * len(normal_images) + [1] * len(covid_images)
@@ -42,7 +43,8 @@ print(f"Total images: {len(images)}")
 print(f"Training images: {len(train_images)}")
 print(f"Testing images: {len(test_images)}")
 
-class TIMITDataset(Dataset):
+##CLASS
+class COVID19Dataset(Dataset):
     def __init__(self, X, y=None):
         self.data = torch.from_numpy(X).float()
         if y is not None:
@@ -100,7 +102,7 @@ def clear_directory(directory_path):
 
 directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total/data'
 clear_directory(directory_to_clear)
-
+##
 for img in train_images:
     path = find_file_directory('/oscar/home/dfurtad1/projects/COVID19-DATASET', img) + '/' + img
     destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/train/total/data'
