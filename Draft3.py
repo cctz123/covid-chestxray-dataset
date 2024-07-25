@@ -37,10 +37,12 @@ labels = [0] * len(normal_images) + [1] * len(covid_images)
 
 #SPLIT DATA
 train_images, test_images, train_labels, test_labels = train_test_split(images, labels, test_size=0.25, stratify=labels)
+train_images, val_images, train_labels, val_labels = train_test_split(train_images, train_labels, test_size=0.25, stratify=train_labels)
 
 print(f"Total images: {len(images)}")
 print(f"Training images: {len(train_images)}")
 print(f"Testing images: {len(test_images)}")
+print(f"Validation images: {len(val_images)}")
 
 class TIMITDataset(Dataset):
     def __init__(self, X, y=None):
@@ -114,6 +116,14 @@ for img in test_images:
     destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/test/data'
     shutil.copy(path, destination)
 
+directory_to_clear = '/oscar/home/dfurtad1/projects/COVID19-DATASET/valid/data'
+clear_directory(directory_to_clear)
+
+for img in val_images:
+    path = find_file_directory('/oscar/home/dfurtad1/projects/COVID19-DATASET', img) + '/' + img
+    destination = '/oscar/home/dfurtad1/projects/COVID19-DATASET/valid/data'
+    shutil.copy(path, destination)
+
 train_tfm = transforms.Compose([
     # Resize the image into a fixed shape (height = width = 128)
     transforms.Resize((128, 128)),
@@ -133,17 +143,17 @@ batch_size = 64
 
 from torch.utils.data import DataLoader
 
+
 # Construct datasets.
 # The argument "loader" tells how torchvision reads the data.
 train_set = DatasetFolder("COVID19-DATASET/train/total", loader=lambda x: Image.open(x), extensions=("jpg", "jpeg", "png"), transform=train_tfm)
-# valid_set = DatasetFolder("food-11/validation", loader=lambda x: Image.open(x), extensions="jpg", transform=test_tfm)
+valid_set = DatasetFolder("COVID19-DATASET/valid", loader=lambda x: Image.open(x), extensions=("jpg", "jpeg", "png"), transform=test_tfm)
 test_set = DatasetFolder("COVID19-DATASET/test", loader=lambda x: Image.open(x), extensions=("jpg", "jpeg", "png"), transform=test_tfm)
 
 # Construct data loaders.
 train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
-# valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+valid_loader = DataLoader(valid_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
-
 
 class Classifier(nn.Module):
     def __init__(self):
